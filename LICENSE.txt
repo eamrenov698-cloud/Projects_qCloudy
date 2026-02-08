@@ -1,33 +1,54 @@
 Creative Commons Attribution 4.0 International (CC BY 4.0)
 
-Авторское право © 2026 Yernar Amrenov
+Copyright © 2026 Yernar Amrenov
 
-Данный репозиторий лицензирован по лицензии Creative Commons Attribution 4.0 International.
 
-Вы имеете право:
+LICENSE NOTICE
 
-Делиться — копировать и распространять материал на любом носителе и в любом формате
+This repository is licensed under the Creative Commons Attribution 4.0
+International License (CC BY 4.0).
 
-Адаптировать — перерабатывать, изменять и создавать производные материалы
-для любых целей, в том числе коммерческих.
 
-При соблюдении следующих условий:
+YOU ARE FREE TO:
 
-Указание авторства — вы должны указать соответствующее авторство, предоставить ссылку на лицензию и обозначить, были ли внесены изменения.
+• Share — copy and redistribute the material in any medium or format
+• Adapt — remix, transform, and build upon the material
+  for any purpose, including commercial purposes
 
-Полный текст лицензии:
+
+UNDER THE FOLLOWING TERMS:
+
+• Attribution — You must give appropriate credit, provide a link to the
+  license, and indicate if changes were made.
+
+
+FULL LICENSE TEXT:
+
 https://creativecommons.org/licenses/by/4.0/
 
-Область действия лицензии
 
-Данная лицензия применяется ТОЛЬКО к содержимому этого репозитория, включая, но не ограничиваясь:
+SCOPE OF THE LICENSE
 
-файлами README
+This license applies ONLY to the contents of THIS repository, including but
+not limited to:
 
-письменными описаниями
+• README files
+• Written documentation and descriptions
+• Diagrams or images stored in this repository
 
-диаграммами или изображениями, хранящимися в этом репозитории
 
-Данная лицензия НЕ распространяется на какие-либо внешние репозитории, на которые даны ссылки в этом портфолио. Каждый связанный проект регулируется собственной лицензией, указанной в соответствующем репозитории.
+EXCLUSIONS
 
-Никакие права не предоставляются на исходный код, наборы данных, модели машинного обучения или другие ресурсы, содержащиеся во внешних репозиториях.
+This license DOES NOT apply to:
+
+• Any external repositories linked from this portfolio
+• Source code, datasets, machine learning models, or other resources
+  contained in external repositories
+
+Each linked project is governed by its own license as specified in the
+corresponding repository.
+
+
+NO ADDITIONAL RIGHTS
+
+No rights are granted beyond those explicitly stated in this license notice.
