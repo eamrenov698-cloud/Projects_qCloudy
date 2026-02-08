@@ -23,7 +23,7 @@
 - примеры запросов из Telegram
 - типичные сценарии использования
 
-[https://youtu.be/Q-4oAfzK9zo ](https://youtu.be/Q-4oAfzK9zo) 
+[![Watch the video](https://img.youtube.com/vi/Q-4oAfzK9zo/0.jpg)](https://youtu.be/Q-4oAfzK9zo)
 
 **Стек:**
 - n8n
