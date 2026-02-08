@@ -1,35 +1,33 @@
 Creative Commons Attribution 4.0 International (CC BY 4.0)
 
-Copyright (c) 2026 Yernar Amrenov
+Авторское право © 2026 Yernar Amrenov
 
-This repository is licensed under the Creative Commons Attribution 4.0
-International License.
+Данный репозиторий лицензирован по лицензии Creative Commons Attribution 4.0 International.
 
-You are free to:
-- Share — copy and redistribute the material in any medium or format
-- Adapt — remix, transform, and build upon the material
-for any purpose, even commercially.
+Вы имеете право:
 
-Under the following terms:
-- Attribution — You must give appropriate credit, provide a link to the
-  license, and indicate if changes were made.
+Делиться — копировать и распространять материал на любом носителе и в любом формате
 
-Full license text:
+Адаптировать — перерабатывать, изменять и создавать производные материалы
+для любых целей, в том числе коммерческих.
+
+При соблюдении следующих условий:
+
+Указание авторства — вы должны указать соответствующее авторство, предоставить ссылку на лицензию и обозначить, были ли внесены изменения.
+
+Полный текст лицензии:
 https://creativecommons.org/licenses/by/4.0/
 
----
+Область действия лицензии
 
-Scope of License
+Данная лицензия применяется ТОЛЬКО к содержимому этого репозитория, включая, но не ограничиваясь:
 
-This license applies ONLY to the contents of this repository, including but
-not limited to:
-- README files
-- Written descriptions
-- Diagrams or images stored in this repository
+файлами README
 
-This license DOES NOT apply to any external repositories linked from this
-portfolio. Each linked project is governed by its own license, which is
-specified in its respective repository.
+письменными описаниями
 
-No rights are granted to any source code, datasets, machine learning models,
-or other assets contained in external repositories.
+диаграммами или изображениями, хранящимися в этом репозитории
+
+Данная лицензия НЕ распространяется на какие-либо внешние репозитории, на которые даны ссылки в этом портфолио. Каждый связанный проект регулируется собственной лицензией, указанной в соответствующем репозитории.
+
+Никакие права не предоставляются на исходный код, наборы данных, модели машинного обучения или другие ресурсы, содержащиеся во внешних репозиториях.
