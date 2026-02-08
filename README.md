@@ -42,5 +42,7 @@
 и **Компьютерного Зрения**, ссылки на них указаны ниже:
 
 [Предсказывание цены](https://github.com/eamrenov698-cloud/Christmass_tree_price_prediction.git)
+[Расчет скорости транспорта](https://github.com/eamrenov698-cloud/Vehicles-speed-estimation.git)
+[Отслеживание футболистов на поле](https://github.com/eamrenov698-cloud/football-player-detection.git)
 
 Последующее описание по их реализации и использованию вы сможете найти в этих репозиториях.
