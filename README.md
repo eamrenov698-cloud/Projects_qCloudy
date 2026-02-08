@@ -23,8 +23,7 @@
 - примеры запросов из Telegram
 - типичные сценарии использования
 
-linkdfdf
-
+[https://youtu.be/Q-4oAfzK9zo ](https://youtu.be/Q-4oAfzK9zo) 
 
 **Стек:**
 - n8n
