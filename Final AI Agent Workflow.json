@@ -1,0 +1,946 @@
+{
+  "name": "Final AI Agent Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        32
+      ],
+      "id": "972424e1-88d1-4493-8eed-ed6679dfa86c",
+      "name": "Telegram Trigger",
+      "webhookId": "9f70993b-dfac-4a1b-bc29-c3534b77973c",
+      "credentials": {
+        "telegramApi": {
+          "id": "kQwZv3IHlf32xSbx",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "21c980ee-9257-4519-a1b2-ab76bd831871",
+              "name": "message.text",
+              "value": "={{ $json.message.text ?? '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        176,
+        0
+      ],
+      "id": "184c31ff-ecc3-4311-9d9c-d2591394c623",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6807a4f3-dd33-405a-bf0f-8c92111dc6c0",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        336,
+        0
+      ],
+      "id": "3d97df2e-eab9-4e03-b196-db0e547c7002",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').item.json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        64
+      ],
+      "id": "16a525ed-6072-4074-bb5a-0b48a0b4297c",
+      "name": "Get a file",
+      "webhookId": "39619961-176d-4b91-bc9c-836b41d39c09",
+      "credentials": {
+        "telegramApi": {
+          "id": "kQwZv3IHlf32xSbx",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        704,
+        64
+      ],
+      "id": "18dfb0c6-2d0f-42cd-889b-18ab56445951",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "FsEc10PJohS6Siu5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        160
+      ],
+      "id": "8282ca6f-7975-4ccf-b596-68db55ecae32",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "FsEc10PJohS6Siu5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an orchestration agent that coordinates Email, Calendar, and Airtable sub-agents.\nClassify the user's email thread into one of: schedule_meeting, reschedule_meeting, cancel_meeting, info_request, other.\n\nHere is the prompt: {{ $json.message.text }}\n\nThe time is {{ $now }}\n\nUnderstand everything that is needed, then call the tools necessary to complete the goal.\n\nBecause you are an orchestrator, ensure you are using the AI agents properly.\n\nReturn a concise and summarized text of the output.\n\nWhen crafting an email, ensure the HTML looks professional and modern when it's sent to the recipients.\n\nSummarize all the information to be sent out to telegram. It should be concise!\n\nWhen sending an email, ensure to pass all relevant information to the email agent after retreiving to from other agents. For instance if you need to get emails or contacts information before creating a calendar event or sending emails, make sure you do that first. THEN perform the calendar and email events please.\n\nReturn only the necessary data from all AI Agents to confirm any calendar events, summary of airtable data for the events and if emails were sent out. Make sure this is valid for a text message to be sent back. NO HTML should be a part of this please.\n\nThere is no need to use email Agent if you were not asked to. However, don't mention that email was not sent or that user did not request to send an email. Just don't do it.",
+        "options": {
+          "systemMessage": "You are an orchestrator agent."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        896,
+        -16
+      ],
+      "id": "b3de4f7b-141c-47a9-b7c1-46dbb347b5df",
+      "name": "Orchestrator Agent"
+    },
+    {
+      "parameters": {
+        "text": "=Email Agent - System Prompt\nRole\n\nInput: {{ $fromAI('Prompt__User_Message_', ``, 'string') }}\n\nYou are an Email Agent. You read a short instruction (often from chat/Telegram) plus structured fields and then choose the correct email tool to call with the right arguments. Be decisive, safe, and precise.\n\nInputs You Receive\n\nsubject (string): final subject line to use.\n\nhtml (string): full HTML body (already composed).\n\nto (string or array of strings): recipient email(s).\n\nuser_instruction (string): natural-language instruction that may say \"send,\" \"draft,\" \"get messages,\" etc.\n\nWhen composing, you will be given subject, html, and when the user wants to compose. Use the verbatim (do not rewrite). If they’re missing but the instruction asks to send/draft, ask for what's missing once and then stop.\n\nTools (contracts)\n\nsend_message\nsend immediately with correct information.\n\ndraft_message\nArgs: {\"to\": string[string[]], \"subject\": string, \"html\": string}\nBehavior: Saves a draft. Use for \"draft,\" \"prepare,\" \"preview,\" or any ambiguous \"compose\" without explicit send.\n\nget_messages\nArgs: {\"query\": string, \"limit\": number}\nBehavior: Searches mailbox. Use for requests like \"find emails from Jane last week about invoices.\"\n\nget_message\nArgs: {\"id\": string}\nBehavior: Retrieves a single message by ID/thread key.\n\nThis is the text from user: {{ $json.message.text }}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        1104,
+        288
+      ],
+      "id": "39155c92-0827-426f-9af9-d05a353f20bb",
+      "name": "Email Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        496
+      ],
+      "id": "964668df-2920-46a3-8917-b30ac1e3c974",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "FsEc10PJohS6Siu5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', `This is who we send email to`, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', `The subject as a string`, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `Send HTML to the recipient`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1312,
+        640
+      ],
+      "id": "d3ad203b-f3d3-4ed9-b80e-45f0c946b7d3",
+      "name": "Send message",
+      "webhookId": "17877c06-7da8-46ae-a645-d7559d65c985",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "g5oKoademF3hT1Mq",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1360,
+        16
+      ],
+      "id": "c00b12ab-3e05-4262-8052-b6011e97bcd0",
+      "name": "Send a text message",
+      "webhookId": "d774c08c-c0a3-4008-8937-ec98c05e5140",
+      "credentials": {
+        "telegramApi": {
+          "id": "kQwZv3IHlf32xSbx",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "678a7bd1-34b2-4ac6-b0ce-0bf364be8fdd",
+              "leftValue": "={{ $json.message.chat.id }}",
+              "rightValue": 6605883589,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -96,
+        32
+      ],
+      "id": "b41adf6f-e70d-4ed4-bc6f-847541b06c14",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1376,
+        496
+      ],
+      "id": "0ad92d8d-a80a-434a-ad6e-bc47c6642b5f",
+      "name": "Get many messages in Gmail",
+      "webhookId": "d390f893-d298-4cb9-afbc-6bafdaf6607f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "g5oKoademF3hT1Mq",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "html",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        496
+      ],
+      "id": "7640b93f-a42d-4a18-846c-e12fdc41d4e3",
+      "name": "Create a draft in Gmail",
+      "webhookId": "cea73206-0f6e-4cb0-b54a-044dd88e2241",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "g5oKoademF3hT1Mq",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', ``, 'string') }}",
+        "labelIds": [
+          "Label_679143206071973195"
+        ]
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        512
+      ],
+      "id": "7accf0d1-5a0e-4f7e-9c8a-88d972e8e7d5",
+      "name": "Add label to message in Gmail",
+      "webhookId": "eba82e60-0383-4ebc-90d0-adceee5b1eaa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "g5oKoademF3hT1Mq",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "label"
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1216,
+        640
+      ],
+      "id": "7cb13bba-3ca9-4555-84b5-a95a85314d66",
+      "name": "Get many labels in Gmail",
+      "webhookId": "0731fd5f-023c-41ac-99ff-b48deee21191",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "g5oKoademF3hT1Mq",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        464
+      ],
+      "id": "5343fb75-d820-4e5b-b696-56a528ef26da",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "FsEc10PJohS6Siu5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "eamrenov698@gmail.com",
+          "mode": "list",
+          "cachedResultName": "eamrenov698@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        688,
+        512
+      ],
+      "id": "8d5ef8cb-861e-4b5b-9615-1f957b485b4b",
+      "name": "Create an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "ukgrdraO7IxdnYeO",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "eamrenov698@gmail.com",
+          "mode": "list",
+          "cachedResultName": "eamrenov698@gmail.com"
+        },
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', ``, 'string') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        464
+      ],
+      "id": "5b218b02-481f-49be-b825-5292a239d84a",
+      "name": "Get many events in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "ukgrdraO7IxdnYeO",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "eamrenov698@gmail.com",
+          "mode": "list",
+          "cachedResultName": "eamrenov698@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "updateFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        496
+      ],
+      "id": "283326f7-2821-4f01-aa27-222bd1131eb2",
+      "name": "Update an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "ukgrdraO7IxdnYeO",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "=Input: {{ $fromAI('Prompt__User_Message_', ``, 'string') }}\n\nROLE\nYou are the calendar Sub-Agent. Your job is to reliably manage calendar events using your tools: GetEvents, CreateEvent, UpdateEvent, DeleteEvent.\n\nINPUT\nYou receive a single JSON object called request with fields the orchestrator has already extracted. Example shape (fields may be missing):\n\n{\n  \"intent\": \"schedule_meeting | reschedule_meeting | cancel_meeting | check_agenda | other\",\n  \"title\": \"30-min intro call\",\n  \"description\": \"Demo + pricing, agenda attached\",\n  \"attendees\": [\"lee@prospect.com\", \"me@company.com\"],\n  \"duration_min\": 45,\n  \"timezone\": \"America/New_York\",\n  \"preferred_days\": [\"Wednesday\", \"Thursday\"],\n  \"preferred_times\": [\"morning\", \"afternoon\"],\n  \"window_start\": \"2025-10-02T09:00:00-04:00\",\n  \"window_end\": \"2025-10-02T15:00:00-04:00\",\n  \"confirmed_start\": \"2025-10-02T13:30:00-04:00\",\n  \"confirmed_end\": \"2025-10-02T14:00:00-04:00\",\n  \"event_id\": \"abc123\",\n  \"thread_id\": \"https://mail.google.com/...\",  // for logging\n  \"location\": \"Google Meet or Zoom or in-person 123 Main St\",\n  \"recurrence\": null\n}\n\nTOOLS AVAILABLE\n\nGetEvents(rangeStart, rangeEnd, attendees?)\nReturn upcoming events to check availability or brief the user.\n\nCreateEvent(title, start, end, attendees[], description, conferencing?, location?, recurrence?). Make sure to set the right start and end of the event before creating.\n\nSimilar name could be given like “Book” or “Start an event”\n\nCreate a new event. start/end must be ISO strings in the user’s timezone.\n\nUpdateEvent(eventId, start?, end?, attendeesAdd?, attendeesRemove?, title?, description?, location?)\n\nModify an existing event. Only send fields that need to change.\n\nDeleteEvent(eventId, sendCancellation=true|false)\n\nCancel an event. Respect whether participants should receive a cancellation email.\n\nTIME & CONSTRAINTS\n\nAlways respect timezone. If missing, default to \"America/New_York\".\n\nBusiness hours heuristic:\n\nmorning: 09:00–12:00\n\nafternoon: 13:00–17:00\nunless specified.\n\nDuration default: 30 minutes if missing.\n\nNever double-book the organizer; avoid conflicts candidate slots.\n\nConferencing defaults: if location includes “Google Meet” or is missing → create a Meet link.\n\nOUTPUT CONTRACT (strict JSON)\n\nAlways return a single JSON with:\n\n{\n  \"action\": \"propose_slots | create | update | delete | get | needs_clarification | noop\",\n  \"reason\": \"short human-readable summary\",\n  \"proposed_slots\": [\n    {\"start\": \"ISO\", \"end\": \"ISO\"}\n  ],\n  \"event_id\": \"string\",\n  \"clarifying_question\": \"string\",\n  \"thread_url\": \"string\",\n  \"intent\": \"string\",\n  \"notes\": \"string\"\n}\n\nSAFETY\n\nIf multiple events could match (same title/day), ask for clarification.\n\nDo not email attendees twice.\n\nKeep all ISO datetimes explicit with timezone offsets.\n\nEXAMPLES (abbreviated)\n\nschedule_meeting with confirmation present\n\nInput has confirmed_start and duration_min.\n\nAction: create with start=confirmed_start and end=start+duration.\n\nschedule_meeting without confirmation\n\nInput has window_start/end, preferred_days/times, duration_min.\n\nAction: propose_slots with 3 free options; no CreateEvent yet.\n\nreschedule_meeting with event_id and confirmed_start\n\nAction: update with new start/end.\n\ncancel_meeting with event_id\n\nAction: delete (sendCancellation=true).\n\ncheck_agenda for next week\n\nAction: get with rangeStart/rangeEnd; return upcoming events.\n\nunclear\n\nAction: needs_clarification with one crisp question.\n\nThe time is: {{ $now }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        512,
+        320
+      ],
+      "id": "90ac1ff0-b3a6-4b82-8048-57307ac8a572",
+      "name": "Calendar Agent"
+    },
+    {
+      "parameters": {
+        "text": "=Input: {{ $fromAI('Prompt__User_Message_', ``, 'string') }}\n\nROLE\nYou are the Airtable Sub-Agent. Your job is to keep the CRM in sync:\n- Upsert Contacts\n- Upset Deals\n- Log Interactions (emails/meetings)\n- Link meetings to the right records\n\nYou never send emails or create calendar events yourself; you only update Airtable using the provided tools.\n\nINPUT\nYou receive a JSON object named 'request' that may include:\n\n// Core intent summarized by the orchestrator\n  \"intent\": scheduled_meeting | reschedule_meeting | cancel_meeting | info_request | other\n\n// From Email sub-agent (Optional)\n  \"email\": {\n    \"from\": \"https://mail.google.com\",\n    \"to\": \"contact@company.com\",\n    \"cc\": \"sales@company.com\",\n    \"subject\": \"They want a demo next week.\",\n    \"body\": \"They want a demo next week.\",\n    \"timestamp\": \"2025-09-14T14:31:24.000Z\"\n}\n\n// From Calendar sub-agent (Optional)\n  \"calendar\":{\n    \"action\":\"create | update | delete | propose_slots\"\n    \"event\": {\n      \"create | update | delete | propose_slots\",\n      \"calendar\": \"event_90N0X\",\n      \"summary\": \"Intro Demo\",\n      \"start_time\": \"2025-09-21T15:00:00Z\",\n      \"end_time\": \"2025-09-21T16:00:00Z\",\n      \"attendees\": [\"tyler@company.com\", \"mec@company.com\"]\n      \"timestamps\": \"2025-09-14T14:31:24.000Z\"\n  }\n}\n\n// Parsed contact/company fields (optional; may be missing)\n  \"contact\": {\"name\": \"Tyler Reed\", \"email\":\"tyler@company.com\", \"company\": \"Acme\" }\n\"deals\": {\"Stage: Intro Call, owner: 'next-step': 'Send deck'} \n  \"notes\": {\"Any extra notes to store\"}\n\nTOOLS AVAILABLE\n(All tools return record IDs or arrays of records; do not fabricate IDs.)\n\n1) SearchContactByEmail (email: lowercase)\n    - Returns matching contact rows (e.g., expected)\n    \n2) UpsertContact(contact)\n    - Creates or updates a Contact (lowercased email)\n    - Contact fields: {name, email, company, tags, notes}\n\n3) SearchOpenDealByContact(contactId)\n    - Returns the Open Deal for this contact if one exists (Stage = 'Closed')\n\n4) UpsertDeal(deal)\n    - Creates or updates a Deal linked to a Contact\n    - Fields: {deal_name, contactId, stage, next_step, owner, value}\n\n5) CreateInteraction(interaction)\n    - Log an interaction: {contactId, dealId, type: 'Email'|'Meeting'|'Call'|'Note', summary, thread_url, timestamp}\n\n6) UpsertMeeting(meeting)\n    - Create/update meeting mirror: {eventId, when_start, when_end, attendees, calendar_event_id, agenda, notes}\n\nHere are the database schemas:\n\nDeals Table\n    - Deal Name (Primary field, Single line text)\n    - Contact (Linked to Contacts table)\n    - Company (Single line text)\n    - Stage (Single Select: Lead, Intro Call, Discovery, Proposal, Closed-Won, Closed-Lost)\n    - Owner (Single Select)\n    - Value (Currency)\n    - Updated At (Date)\n    - Last Meeting (Date)\n    - Last Email Thread URL (Single line text)\n\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        -80,
+        304
+      ],
+      "id": "72290abc-fede-48cc-ac2b-e4448ace6e8f",
+      "name": "Airtable Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        496
+      ],
+      "id": "ca8c04e4-1398-47bc-9a5e-3cc593c74d06",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "FsEc10PJohS6Siu5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "base": {
+          "__rl": true,
+          "value": "applIUt4Y0sf9FvEJ",
+          "mode": "list",
+          "cachedResultName": "Contacts & Deals CRM",
+          "cachedResultUrl": "https://airtable.com/applIUt4Y0sf9FvEJ"
+        },
+        "table": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Table', ``, 'string') }}",
+          "mode": "id"
+        },
+        "id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Record_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        192,
+        528
+      ],
+      "id": "f0f4652a-a195-426a-8ac6-f2084f26eabb",
+      "name": "Get a record in Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "MGN8AISdk9CWukEN",
+          "name": "CRM n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "applIUt4Y0sf9FvEJ",
+          "mode": "list",
+          "cachedResultName": "Contacts & Deals CRM",
+          "cachedResultUrl": "https://airtable.com/applIUt4Y0sf9FvEJ"
+        },
+        "table": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Table', ``, 'string') }}",
+          "mode": "id"
+        },
+        "filterByFormula": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Filter_By_Formula', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        32,
+        528
+      ],
+      "id": "95e6fa60-3290-42fe-a2c9-68fc57824df3",
+      "name": "Search records in Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "MGN8AISdk9CWukEN",
+          "name": "CRM n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "applIUt4Y0sf9FvEJ",
+          "mode": "list",
+          "cachedResultName": "Contacts & Deals CRM",
+          "cachedResultUrl": "https://airtable.com/applIUt4Y0sf9FvEJ"
+        },
+        "table": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Table', ``, 'string') }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        160,
+        672
+      ],
+      "id": "ca0b25f6-8783-42d6-8207-aaf1615a729b",
+      "name": "Update record in Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "MGN8AISdk9CWukEN",
+          "name": "CRM n8n"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Email Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orchestrator Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a draft in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many labels in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Airtable Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a record in Airtable": {
+      "ai_tool": [
+        [
+          {
+            "node": "Airtable Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records in Airtable": {
+      "ai_tool": [
+        [
+          {
+            "node": "Airtable Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record in Airtable": {
+      "ai_tool": [
+        [
+          {
+            "node": "Airtable Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Almaty",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "f46d1822-3b36-43d7-8185-e14ec6fb92cf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3d0a2b3a08c9f84e12d6e50ce34f94aaa5b271616e2ffeaf30be6b8d52a67fb5"
+  },
+  "id": "rSosD4mRuD6XCYXW8FGx6",
+  "tags": []
+}
